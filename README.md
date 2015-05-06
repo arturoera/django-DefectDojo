@@ -1,3 +1,7 @@
+#Forked project from DefectDojo
+
+This will be an attempt to adjust DefectDojo to provide Implementation Teams some nice Metrics.
+
 # Description
 
 ![Screenshot of DefectDojo](./doc/img/screenshot1.png)

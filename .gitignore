@@ -83,3 +83,7 @@ bower_components/
 dojo/static/*
 !dojo/static/dojo/*
 
+#virtualenv
+/include
+/local
+/static
