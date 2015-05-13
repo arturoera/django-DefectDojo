@@ -20,29 +20,49 @@
 {% block content %}
     <div class="row navbar-fixed-top">
         <div class="col-md-12">
-            <h2>{{ name }} For {{ start_date.date }} - {{ end_date.date }}
+            <h2>{{ name }}  <!-- {{ start_date.date }} - {{ end_date.date }} -->
                 <a class="btn close pull-right" href="{% url 'metrics' %}" aria-hidden="true">&times;</a>
             </h2>
         </div>
     </div>
     <div class="row metric-data">
-        <div class="col-md-6 section-start">
+
+
+        <div class="col-md-4 section-start">
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    Open Bug Count by Month
+                    Total Open Master Tickets: <b>700</b>    
                 </div>
                 <!-- /.panel-heading -->
                 <div class="panel-body">
-                    <div id="chart_div" class="graph"></div>
+                    <div id="total_mts" class="graph"></div>
+                </div>
+                <!-- /.panel-body -->
+            </div>
+            <!-- /.panel -->
+        </div>        
+
+        <div class="col-md-8 section-start">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    Master Tickets Step Distribution
+                </div>
+                <!-- /.panel-heading -->
+                <div class="panel-body">
+                    <div id="mt_distribution" class="graph"></div>
                 </div>
                 <!-- /.panel-body -->
             </div>
             <!-- /.panel -->
         </div>
-        <div class="col-md-6">
+
+
+
+
+        <div class="col-md-12">
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    Accepted Bug Count by Month
+                    IE assigned work
                 </div>
                 <!-- /.panel-heading -->
                 <div class="panel-body">
@@ -52,10 +72,11 @@
             </div>
             <!-- /.panel -->
         </div>
+
         <div class="col-md-12 section-start">
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    Open Bug Count by Week
+                    IL Assigned Work
                 </div>
                 <!-- /.panel-heading -->
                 <div class="panel-body">
@@ -213,15 +234,44 @@
                 },
                 tooltip: false,
             };
-            chart_div();
+            total_mts();
+            mt_distribution();
+            // chart_div();
             chart_div2();
             chart_div3();
             chart_div4();
-            top_ten_products();
+            
             severity_pie();
             total_accepted_pie();
             total_closed_pie();
 
+            function total_mts() {
+                var data = [
+                    { label: "On Time",  data: 659, color: "#89A54E"},
+                    { label: "Late",  data: 300, color: "#AA4643"},
+                ];
+
+                $.plot($("#total_mts"), data, {
+                     series: {
+                        pie: {
+                            show: true,
+                            radius: 1,
+                            label: {
+                                show: true,
+                                radius: 2/3,
+                                formatter: function(label, series) {
+                                return '<div style="font-size:14px ;text-align:center; padding:2px; color:white;">'+label+'<br/>'+Math.round(series.percent)+'%</div>';
+                                }
+                            },
+                            threshold: 0.1
+                        }
+                     },
+                     legend: {
+                        show: true
+                        // labelBoxBorderColor: "none"
+                     }
+                });
+            }
 
             function chart_div() {
                 var critical = [],
@@ -407,50 +457,50 @@
                         options);
             }
 
-            function top_ten_products() {
-                var critical = [];
-                var high = [];
+            function mt_distribution() {
+                var ontime = [ [0,100], [1,120], [2,89], [3,99], [4,110]];
+                var late = [ [0,150], [1,70], [2,30], [3,33], [4,29] ];
                 var medium = [];
                 var low = [];
-                var ticks = []
-                {% for t in top_ten_products %}
-                    ttp = {{forloop.counter}}
-                            ticks.push([ttp, $("{{t.0|safe}}").text()]),
-                            critical.push([ttp, {{t.1}}]);
-                    high.push([ttp, {{t.2}}]);
-                    medium.push([ttp, {{t.3}}]);
-                    low.push([ttp, {{t.4}}]);
-                {% endfor %}
+                var ticks = [ [0, "Step 1"], [1, "Step 2"], [2, "Step 3"], [3, "Step 4"], [4, "Step 5"] ];
+                // {% for t in top_ten_products %}
+                //     ttp = {{forloop.counter}}
+                //             ticks.push([ttp, $("{{t.0|safe}}").text()]),
+                //             critical.push([ttp, {{t.1}}]);
+                //     high.push([ttp, {{t.2}}]);
+                //     medium.push([ttp, {{t.3}}]);
+                //     low.push([ttp, {{t.4}}]);
+                // {% endfor %}
 
                 data1 = [
                     {
-                        data: critical,
-                        color: "#d9534f",
-                        bars: {fill: 1},
-                        label: 'Critical',
-                    },
-                    {
-                        data: high,
-                        color: "#f0ad4e",
-                        bars: {fill: 1},
-                        label: 'High',
-
-                    },
-                    {
-                        data: medium,
-                        color: "#f0de28",
-                        bars: {fill: 1},
-                        label: 'Medium',
-                    },
-                    {
-                        data: low,
+                        data: ontime,
                         color: "#337ab7",
                         bars: {fill: 1},
-                        label: 'Low',
+                        label: 'On Time',
                     },
+                    {
+                        data: late,
+                        color: "#d9534f",
+                        bars: {fill: 1},
+                        label: 'Late',
+
+                    },
+                    // {
+                    //     data: medium,
+                    //     color: "#f0de28",
+                    //     bars: {fill: 1},
+                    //     label: 'Medium',
+                    // },
+                    // {
+                    //     data: low,
+                    //     color: "#337ab7",
+                    //     bars: {fill: 1},
+                    //     label: 'Low',
+                    // },
                 ];
 
-                $.plot("#top-ten", data1, {
+                $.plot("#mt_distribution", data1, {
                     series: {
                         stack: true,
                         bars: {
@@ -562,18 +612,22 @@
                 var data = [{
                     label: "Critical",
                     color: "#d9534f",
+                    // data: 19.5 
                     data: {{closed_in_period_counts.Critical}}
                 }, {
                     label: "High",
                     color: "#f0ad4e",
+                    // data: 20 
                     data: {{closed_in_period_counts.High}}
                 }, {
                     label: "Medium",
                     color: "#f0de28",
+                    // data: 50
                     data: {{closed_in_period_counts.Medium}}
                 }, {
                     label: "Low",
                     color: "#337ab7",
+                    // data: 40
                     data: {{closed_in_period_counts.Low}}
                 }];
 
