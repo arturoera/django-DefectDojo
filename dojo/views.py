@@ -964,7 +964,7 @@ def metrics(request, mtype):
         page_name = "Metrics"
         if 'view' in request.GET and 'dashboard' == request.GET['view']:
             template = 'dojo/dashboard-metrics.html'
-            page_name = getattr(settings, 'TEAM_NAME', '') + ' Metrics'
+            page_name = getattr(settings, 'TEAM_NAME', '') + ' Live Metrics'
     else:
         pt = Product_Type.objects.filter(id=mtype)
         request.GET._mutable = True

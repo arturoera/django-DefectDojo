@@ -56,40 +56,53 @@
             <!-- /.panel -->
         </div>
 
-
-
-
         <div class="col-md-12">
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    IE assigned work
+                    Implementation Engineer assigned accounts
                 </div>
                 <!-- /.panel-heading -->
                 <div class="panel-body">
-                    <div id="chart_div2" class="graph"></div>
+                    <div id="ie_distribution" class="graph"></div>
                 </div>
                 <!-- /.panel-body -->
             </div>
             <!-- /.panel -->
         </div>
 
-        <div class="col-md-12 section-start">
+        <div class="col-md-8 section-start">
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    IL Assigned Work
+                    NPS Responses
                 </div>
                 <!-- /.panel-heading -->
                 <div class="panel-body">
-                    <div id="chart_div3" class="graph"></div>
+                    <div id="nps_responses" class="graph"></div>
                 </div>
                 <!-- /.panel-body -->
             </div>
             <!-- /.panel -->
         </div>
+
+        <div class="col-md-4 section-start">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    Provisioning Queue in CORE   
+                </div>
+                <!-- /.panel-heading -->
+                <div class="panel-body">
+                    <div id="core_queue" class="graph"></div>
+                </div>
+                <!-- /.panel-body -->
+            </div>
+            <!-- /.panel -->
+        </div>  
+
+
         <div class="col-md-12 section-start">
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    Accepted Bug Count by Week
+                    Supply Chain Delivery Metric
                 </div>
                 <!-- /.panel-heading -->
                 <div class="panel-body">
@@ -100,79 +113,6 @@
             <!-- /.panel -->
         </div>
 
-
-        {% if top_ten_products %}
-            <div class="col-md-12 section-start">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        Top {{ top_ten_products|length }} Products By Bug Severity
-                    </div>
-                    <!-- /.panel-heading -->
-                    <div class="panel-body">
-                        <div id="top-ten" class="graph"></div>
-                    </div>
-                    <!-- /.panel-body -->
-                </div>
-                <!-- /.panel -->
-            </div>
-        {% endif %}
-        <div class="col-md-4 section-start">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    Total Findings In Period By Severity
-                </div>
-                <!-- /.panel-heading -->
-                <div class="panel-body">
-                    <div id="opened_in_period" class="graph"></div>
-                </div>
-                <!-- /.panel-body -->
-            </div>
-            <!-- /.panel -->
-        </div>
-        <div class="col-md-4">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    Total Findings Accepted In Period By Severity
-                </div>
-                <!-- /.panel-heading -->
-                <div class="panel-body">
-                    <div id="total_accepted_in_period" class="graph"></div>
-                </div>
-                <!-- /.panel-body -->
-            </div>
-            <!-- /.panel -->
-        </div>
-        <div class="col-md-4">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    Total Findings Closed In Period By Severity
-                </div>
-                <!-- /.panel-heading -->
-                <div class="panel-body">
-                    <div id="total_closed_in_period" class="graph"></div>
-                </div>
-                <!-- /.panel-body -->
-            </div>
-            <!-- /.panel -->
-        </div>
-        {% if punchcard %}
-            <div class="col-lg-12 section-start">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        Weekly activity, displayed by day, of findings reported.*
-                    </div>
-                    <div class="panel-body">
-                        <div class="graph-500" id="punchcard"></div>
-                        <p class="text-center text-muted small"><br/>Week begins on date displayed.</p>
-
-                        <p>
-                            <br/>
-                            <span class="text-muted small">* Weeks are only displayed if findings are available.</span>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        {% endif %}
     </div>
     <br/>
 {% endblock %}
@@ -180,10 +120,13 @@
     <!-- Flot Charts JavaScript -->
     <script src="{{ STATIC_URL }}flot/excanvas.min.js"></script>
     <script src="{{ STATIC_URL }}flot/jquery.flot.js"></script>
+    <!-- Flot Bar Numbers plugin: https://github.com/jasonroman/flot-barnumbers-enhanced/blob/master/example.html -->
+    <script src="{{ STATIC_URL }}dojo/js/jquery.flot.barnumbers.enhanced.min.js"></script>
     <script src="{{ STATIC_URL }}flot/jquery.flot.pie.js"></script>
     <script src="{{ STATIC_URL }}flot/jquery.flot.time.js"></script>
     <script src="{{ STATIC_URL }}flot.tooltip/js/jquery.flot.tooltip.min.js"></script>
     <script src="{{ STATIC_URL }}flot/jquery.flot.stack.js"></script>
+
     {% if punchcard %}
         <script src="{{ STATIC_URL }}JUMFlot/JUMFlot.min.js"></script>
         <script src="{{ STATIC_URL }}JUMFlot/jquery.flot.mouse.js"></script>
@@ -237,8 +180,10 @@
             total_mts();
             mt_distribution();
             // chart_div();
-            chart_div2();
-            chart_div3();
+            ie_distribution();
+            
+            nps_responses();
+            core_queue();
             chart_div4();
             
             severity_pie();
@@ -273,75 +218,88 @@
                 });
             }
 
-            function chart_div() {
-                var critical = [],
-                        high = [],
-                        medium = [],
-                        low = [];
+            function core_queue() {
+                var data = [
+                    { label: "Assigned tickets",  data: 4, color: "#89A54E"},
+                    { label: "Unassigned tickets",  data: 10, color: "#AA4643"},
+                ];
 
-                {% for month in opened_per_month|slice:'1:' %}
-                    critical.push([{{ month.0 }}, {{ month.2 }}]);
-                    high.push([{{ month.0 }}, {{ month.3 }}]);
-                    medium.push([{{ month.0 }}, {{ month.4 }}]);
-                    low.push([{{ month.0 }}, {{ month.5 }}]);
-                {% endfor %}
+                $.plot($("#core_queue"), data, {
+                     series: {
+                        pie: {
+                            show: true,
+                            radius: 1,
+                            label: {
+                                show: true,
+                                radius: 2/3,
+                                formatter: function(label, series) {
+                                return '<div style="font-size:14px ;text-align:center; padding:2px; color:white;">'+label+'<br/>'+Math.round(series.percent)+'%</div>';
+                                }
+                            },
+                            threshold: 0.1
+                        }
+                     },
+                     legend: {
+                        show: true
+                        // labelBoxBorderColor: "none"
+                     }
+                });
+            }
 
+            function ie_distribution() {
+                var critical = [ [0,100], [1,120], [2,89], [3,99], [4,110], [5, 80], [6, 45], [7,115] ],
+                    ticks = [ [0, "Engineer 1"], [1, "Engineer 2"], [2, "Engineer 3"], [3, "Engineer 4"], [4, "Engineer 5"], [5, "Engineer 6"], [6,"Engineer 7"], [7,"Engineer 8"] ];
+                       
 
-                $.plot($("#chart_div"), [{
+                $.plot($("#ie_distribution"), [{
                             data: critical,
-                            label: " Critical",
-                            color: "#d9534f",
-                        }, {
-                            data: high,
-                            label: " High",
-                            color: '#f0ad4e',
-                        }, {
-                            data: medium,
-                            label: " Medium",
-                            color: '#f0de28',
-                        }, {
-                            data: low,
-                            label: " Low",
-                            color: '#337ab7',
-                        }],
-                        options);
+                            label: "Assigned Accounts",
+                            color: "#f0ad4e",
+                        } ],
+                        {
+                            series: {
+                                stack: true,
+                                bars: {
+                                    show: true,
+                                    barWidth: .9,
+                                    'align': "center",
+                                    // numbers: {
+                                    //     show: true,
+                                    //     // font: '14pt Arial',
+                                    //     // fontColor: '#FFFFFF',
+                                    //     // threshold: 0.25,
+                                    //     // yAlign: function(y) { return y; },
+                                    //     // yOffset: 5
+
+
+                                    // }
+                                
+
+                                },
+
+
+                            },
+                            grid: {
+                                hoverable: false,
+                                borderWidth: 1,
+                                borderColor: '#e7e7e7',
+
+                            },
+                            tooltip: true,
+                            legend: {
+                                position: "ne"
+                            },
+                            xaxis: {
+                                ticks: ticks,
+                            },
+                        }
+
+
+
+                        );
             };
 
-            function chart_div2() {
-                var critical = [],
-                        high = [],
-                        medium = [],
-                        low = [];
-
-                {% for month in accepted_per_month|slice:'1:' %}
-                    critical.push([{{ month.0 }}, {{ month.2 }}]);
-                    high.push([{{ month.0 }}, {{ month.3 }}]);
-                    medium.push([{{ month.0 }}, {{ month.4 }}]);
-                    low.push([{{ month.0 }}, {{ month.5 }}]);
-                {% endfor %}
-
-
-                $.plot($("#chart_div2"), [{
-                            data: critical,
-                            label: " Critical",
-                            color: "#d9534f",
-                        }, {
-                            data: high,
-                            label: " High",
-                            color: '#f0ad4e',
-                        }, {
-                            data: medium,
-                            label: " Medium",
-                            color: '#f0de28',
-                        }, {
-                            data: low,
-                            label: " Low",
-                            color: '#337ab7',
-                        }],
-                        options);
-            };
-
-            function chart_div3() {
+            function nps_responses() {
                 var critical = [],
                         high = [],
                         medium = [],
@@ -379,7 +337,7 @@
                 };
 
 
-                var plotObj = $.plot($("#chart_div3"), [{
+                var plotObj = $.plot($("#nps_responses"), [{
                             data: critical,
                             label: " Critical",
                             color: "#d9534f",
